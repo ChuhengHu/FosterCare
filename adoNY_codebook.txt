@@ -1,0 +1,38 @@
+adoNY_c_f.csv: Variables about Child Profile and Foster Family Profile
+
+adoNY_c.csv: Subset (Column 1:7) of adoNY_c_f.csv, only Child Profile
+
+adoNY_f.csv: Subset (Column 1, 8:13) of adoNY_c_f.csv, only Foster Family Profile
+
+
+Codebook of adoNY_c_f.csv:
+
+1 RECNUM: record number
+
+[2-7: Child Profile]
+
+2 SEX: child sex
+
+3 AGYSPNDS: child special needs, 0-not applicable, 1-yes, 2-no, 3-unable to determin
+
+4 AgeAtAdopt: child’s age on date of adoption
+
+5 ChildRace: race of child as one variable, 1-White, 2-Black, 3-AmInd, 4-Asian, 5-HawaiiPI, 6-More than One Race, 7-Hispanic Origin
+
+6 BioMomAgeAtBirth: biological mother’s age on date of child’s birth
+
+7 MOMARRD: biological mother married, 0-not applicable, 1-yes, 2-no, 3-unable to determine
+
+[8-13: Foster Family Profile]
+
+8 AdoptMomAge: adoptive mother’s age on date of adoption
+
+9 AdoptDadAge: adoptive father’s age on date of adoption
+
+10 ADPFAMST: adoptive family structure, 0-not applicable, 1-married couple, 2-unmarried couple, 3-single female, 4-single male, 5-unable to determine
+
+11 MomRace: race of adoptive mother as one variable, 1-White, 2-Black, 3-AmInd, 4-Asian, 5-HawaiiPI, 6-More than One Race, 7-Hispanic Origin
+
+12 DadRace: race of adoptive father as one variable, 1-White, 2-Black, 3-AmInd, 4-Asian, 5-HawaiiPI, 6-More than One Race, 7-Hispanic Origin
+
+13 Transracial: transracial adoption, 0-not transracial, 1-child not White + parent White, 2-child White + parent not White, 3-other transracial, 9-insufficient race info
