@@ -1,0 +1,47 @@
+fosNY_c_f.csv: Variables about Child Profile and Foster Family Profile in Foster Care (2015)
+fosNY_c.csv: Subset (Column 1:13) of fosNY_c_f.csv, only Child Profile
+fosNY_f.csv: Subset (Column 1, 14:19) of fosNY_c_f.csv, only Foster Family Profile
+
+Codebook of adoNY_c_f.csv: [9/99/NA-missing data]
+
+1 RecNumbr: record number
+
+[2-13: Child Profile]
+
+2 SEX: child sex, 1-male, 2-female, 9-unknown or missing
+
+3 CLINDIS: diagnosed disability, 1-yes, 2-no, 3-not yet determine
+
+4 AgeAtEnd: child’s age on date of adoption (if adopted) or at the end of the fiscal year (if not adopted)
+
+5 RaceEthn: race of child as one variable, 1-White, 2-Black, 3-AmInd, 4-Asian, 5-HawaiiPI, 6-More than One Race, 7-Hispanic Origin, 99-Unknown
+
+6 P1AgeAtBirth: 1st principle care taker’s age on date of child’s birth
+
+7 CTKFAMST: principal caretaker family structure, 0-Not applicable, 1-Married couple, 2-Unmarried couple, 3-Single female, 4-Single male, 5-Unable to determine
+
+8 TOTALREM: the number of times the child was removed from home, including the current removal
+
+9 NUMPLEP: The number of places the child has lived, including the current setting, during the current removal episode.
+
+10 MANREM: removal manner, 1-Voluntary, 2-Court ordered, 3-Not yet determined
+
+11 RemRsnChil: removal reason because of Child, 1-Yes, 0-No
+
+12 IsTPR: Parents Have Relinquished Parental Rights, 1-Yes, 0-No
+
+13 ado: Child have been adopted, 1-Yes, 0-No
+
+[14-19: Foster Family Profile]
+
+14 F1Age: 1st Foster Caretaker’s age on date of adoption
+
+15 F2Age: 2nd Foster Caretaker’s age on date of adoption
+
+16 FOSFAMST: adoptive family structure, 0-not applicable, 1-married couple, 2-unmarried couple, 3-single female, 4-single male, 5-unable to determine
+
+17 F1Race: race of 1st Foster Caretaker as one variable, 1-White, 2-Black, 3-AmInd, 4-Asian, 5-HawaiiPI, 6-More than One Race, 7-Hispanic Origin, 99-Unknown
+
+18 F2Race: race of 2nd Foster Caretaker as one variable, 1-White, 2-Black, 3-AmInd, 4-Asian, 5-HawaiiPI, 6-More than One Race, 7-Hispanic Origin, 99-Unknown
+
+19 Transracial: transracial adoption, 0-not transracial, 1-child not White + parent White, 2-child White + parent not White, 3-other transracial, 9-insufficient race info
