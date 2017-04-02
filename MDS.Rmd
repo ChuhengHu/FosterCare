@@ -1,0 +1,247 @@
+---
+title: "MDS"
+author: "Chuheng Hu"
+date: "April 1, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(igraph)
+library(tidyr)
+library(corrplot)
+library(rpart)
+library(party)
+```
+
+```{r}
+singlemale<-read.csv("m1.csv")
+singlefemale<-read.csv("f1.csv")
+couple<-read.csv("c1.csv")
+family<-rbind(singlemale,singlefemale,couple)
+kid<-read.csv("kid.csv")
+family_kid<-dplyr::left_join(kid,family,by="RECNUM")
+family_kid$kidtype<-ifelse(grepl(0,family_kid$kidtype),NA,family_kid$kidtype)
+family_kid<-na.omit(family_kid)
+family_kid1<-dplyr::select(family_kid, familytype,kidtype)
+EDGE <- dplyr::count(family_kid1, familytype,kidtype)
+names(EDGE) <- c("from", "to", "count")
+write.csv(EDGE, file = "edge.csv")
+
+VERTEXF <- dplyr::select(family_kid1, familytype)
+VERTEXF$type<-"lightblue"
+VERTEXK <- dplyr::select(family_kid1, kidtype)
+VERTEXK$type<-"orange"
+names(VERTEXK) <- c("name", "type")
+names(VERTEXF) <- c("name", "type")
+
+VERTEXF<-unique(VERTEXF)
+VERTEXK<-unique(VERTEXK)
+
+VERTEX<-rbind(VERTEXF,VERTEXK)
+
+```
+
+
+
+```{r}
+
+g <- graph.data.frame(EDGE, directed=FALSE, directed=TRUE, vertices=VERTEX)
+plot(g,layout=layout.fruchterman.reingold,vertex.size=10,edge.width=0.1*EDGE$count,edge.arrow.size=0.6,vertex.color=VERTEX$type)
+
+```
+
+```{r}
+MDS<-spread(EDGE, to, count, fill = NA, convert = FALSE, drop = TRUE,sep= NULL)
+M1<-as.matrix(MDS)
+MDS<-as.data.frame(M1)
+write.csv(MDS, file = "MDS1.csv")
+
+```
+
+
+```{r}
+library(smacof)
+x<-read.csv("MDS3.csv")
+kable(x)
+
+H <- x[,-1]
+rownames(H) <- x[, 1]
+matrix_to_rotate_x_on_y <- function(x,y) 
+{
+  x <- x / sum(x^2)^.5
+  y <- y / sum(y^2)^.5
+  matrix(c(x[1]*y[1] + x[2]*y[2], x[1]*y[2] - x[2]*y[1],
+         -(x[1]*y[2] - x[2]*y[1]), x[1]*y[1] + x[2]*y[2]), 2, by=T)
+}
+
+```
+
+
+
+```{r}
+library(knitr)
+library(plotrix)
+# devtools::install_github('lcolladotor/dots')
+library(scales)
+library(plyr)
+library(smacof)
+x <- read.csv("MDS4.csv")
+kable(x)
+H <- x[, -1]
+rownames(H) <- x[, 1]
+matrix_to_rotate_x_on_y <- function(x,y) 
+{
+  x <- x / sum(x^2)^.5
+  y <- y / sum(y^2)^.5
+  matrix(c(x[1]*y[1] + x[2]*y[2], x[1]*y[2] - x[2]*y[1],
+         -(x[1]*y[2] - x[2]*y[1]), x[1]*y[1] + x[2]*y[2]), 2, by=T)
+}
+
+
+vmu <- function(H, reflect=c(F,F))
+{
+  n <- nrow(H)                  # n x m matrix
+  m <- nrow(H)
+  H <- scale(H) * (n/(n-1))^.5  # scale with n not n-1
+  dec <- svd(H)
+  U <- dec$u
+  V <- dec$v
+  r <- length(dec$d)  
+  D <- diag(dec$d, r, r)
+  R <- diag( ifelse(reflect == 0, 1, -1) )
+
+  l <- m^.5               # lambda scaling of decompsoition
+  X <- l * U              # no singular values assigned to row points
+  A <- l^-1 * V %*% D     # makes each squared rowsums equal to one
+  X <- X[, 1:2] %*% R     # get first two principal components and 
+  A <- A[, 1:2] %*% R     # flip axes if prompted
+  
+  rownames(X) <- rownames(H) 
+  rownames(A) <- colnames(H)
+  
+  am <- colMeans(A)           # average loading vector
+  alpha <- (sum(am^2))^.5     # calculate alpha measure using unrotated 
+                              # solution, p. 1059
+  
+  Q <- matrix_to_rotate_x_on_y(am, c(1,0))  # rotate plot so am corresponds
+  XQ <- X %*% Q                             # with x-axis
+  AQ <- A %*% Q 
+
+  list(H=H,           # original input (high preference = low value)
+       X=X,           # matrix of row points
+       A=A,           # matrix of column vectors
+       XQ=XQ,         # matrix of row points after rotation on average column vector
+       AQ=AQ,         # matrix of column vectors after rotation
+       a=am,          # average column vector
+       alpha=alpha)   # measure of within-group consensus             
+}
+
+
+# function for textboxes (uses dots and plotrix package)
+textbox2_ <- function(x,y, label, ...)
+{
+  w <- dots::formal_call("strwidth", s=label, ...) / 2 * 1.1
+  plotrix::textbox(c(x - w, x + w), y, label, justify="c", ...)
+  #formal_call("textbox", x=c(x - w, x + w), y=y, 
+  #          textlist=label, justify="c", ...)
+}
+textbox2 <- Vectorize(textbox2_)
+
+
+plot_vmu <- function(v, prop=.9, rows=TRUE, columns=TRUE, 
+                     average=TRUE, circle=TRUE, frame=FALSE) 
+{
+  X <- v$XQ
+  A <- v$AQ
+  
+  # rescale X to fit within unit circle. This destroys projection property but 
+  # not important as no axis calibration is used in plot
+  X <- X / max(rowSums(X^2)^.5)         # scale X to fit within unit circle
+  X <- X * prop                         # make a bit smaller than uni circle   
+  
+  # set up plot
+  mx <- 1.1 #max(max(abs(X)), max(abs(A)))   # max value to set plot limits
+  op <- par(mar=c(.5,.5,.5,.5))
+  plot(NULL, xlim=c(-mx, mx), ylim=c(-mx, mx), asp=1, 
+       xaxt="n", yaxt="n", xaxs="i", yaxs="i", xlab="", ylab="",
+       frame=frame)
+  if (circle) {
+    draw.circle(0,0,1, col = grey(.97))
+  }
+  segments(-1, 0, 1, 0, col="grey")
+  segments(0, -1, 0, 1, col="grey")
+    
+  # respondents (variables)
+  if (columns) {
+    segments(0,0,A[,1],A[,2], col="blue", lwd=2)
+    points(A, col="#0000FF90", pch=15)
+    pos <- ifelse(A[,1] > 0, 4, 2)   # position labels by hemisphere
+    text(A, labels=rownames(A),cex=.7, pos=pos, col="blue")    
+  }
+
+  # row objects
+  if (rows) {
+    points(X, pch=18, col="#FF000090", cex=1.5)
+    text(X, labels=rownames(X), col="red", cex=.7, pos=3) 
+    #textbox2(X[, 1], X[, 2], label=rownames(X), 
+    #         col="red", cex=.7)
+  }
+  
+  # average of all vectors ( ~ prototypical respondent)
+  am <- colMeans(A[, 1:2])  
+  if (average) {
+    #segments(0,0, am[1], am[2], lwd=2) 
+    arrows(0,0,am[1], am[2], lwd=2, length = .1)
+  }
+  
+  # the squared row sums of A are one, so 1 is maximal length of average 
+  par(op)
+}
+```
+
+```{r}
+v <- vmu(H)
+plot_vmu(v)
+```
+
+```{r}
+add_axes <- function(A, col="#0000FF50", lwd=2, lty=5)
+{
+  if (!is.matrix(A))            # convert if a vector
+    A <- matrix(A, ncol=2, by=T)     
+  A <- t(apply(A, 1, function(x) x / sum(x^2)^.5 ))
+  segments(-A[ ,1], -A[ ,2], 0, 0, lty=lty, col=col, lwd=lwd)
+}
+
+
+add_projections <- function(v, i=NULL, j=NULL)
+{
+  X <- v$XQ
+  A <- v$AQ
+  if (is.null(i)) 
+    i <- 1L:nrow(X)    
+  if (is.null(j))
+    j <- 1L:nrow(A)
+  
+  X <- X / max(rowSums(X^2)^.5) * .9   # scale X to fit within unit circle
+
+  # draw respondent axes
+  add_axes(A[j, ], col="#0000FF50")
+
+  # draw projections of row points on respondent axes
+  Xs <- X[i, , drop=FALSE]   # select points to project
+  for (jj in j) {
+    a <- A[jj, ]                              # current axis to project on
+    P <- a %*% t(a) / as.numeric(t(a) %*% a)  # projection matrix
+    Ps <- Xs %*% P                            # project all points
+    segments(Xs[,1], Xs[,2], Ps[,1], Ps[,2], lty=2)    
+  }
+}
+```
+
+```{r}
+plot_vmu(v)
+add_projections(v, j=1)
+```
+
